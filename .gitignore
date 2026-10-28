@@ -1,0 +1,23 @@
+﻿.venv*/
+venv/
+__pycache__/
+*.pyc
+*.db
+*.sqlite3
+*.sql
+*.log
+out*.txt
+node_modules/
+.next/
+.pytest_cache/
+data/real_db/
+data/real_datasets/
+data/registry/
+scratch/
+_audit_backups/
+frontend_backup_before_redesign/
+logs/
+.env
+MCP project demo
+baseline_check.txt
+test_results.txt

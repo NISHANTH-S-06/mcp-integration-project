@@ -1,0 +1,124 @@
+{
+  "dataset_name": "company_mappings",
+  "description": "Master company mapping registry linking company codes to datasets, document types, and configuration",
+  "version": "1.0",
+  "last_updated": "2024-05-21",
+  "total_companies": 5,
+  "records": [
+    {
+      "id": "CM-001",
+      "company_code": "GLS",
+      "company_name": "GLS Group (Germany)",
+      "country": "DE",
+      "industry": "Logistics",
+      "active": true,
+      "source": "company_mappings.json:CM-001",
+      "datasets": ["GLS_Sales_Invoice"],
+      "document_types": ["Sales Invoice", "Credit Note", "Delivery Note"],
+      "primary_language": "de",
+      "secondary_languages": ["en", "nl", "fr"],
+      "date_format": "DD.MM.YYYY",
+      "currency": "EUR",
+      "vat_prefix": "DE",
+      "confidence_threshold": 0.75,
+      "known_issues": [
+        "Invoice Number alias mismatch: 'Invoice No.' not linked",
+        "Legacy pre-2022 documents missing VAT number"
+      ],
+      "erp_system": "SAP S/4HANA",
+      "contact": "ocr-support@gls-germany.com"
+    },
+    {
+      "id": "CM-002",
+      "company_code": "POPRINT",
+      "company_name": "PO Print Supplies Ltd",
+      "country": "GB",
+      "industry": "Printing & Stationery",
+      "active": true,
+      "source": "company_mappings.json:CM-002",
+      "datasets": ["POPRINT_Training"],
+      "document_types": ["Purchase Order", "Goods Receipt", "Return Note"],
+      "primary_language": "en",
+      "secondary_languages": [],
+      "date_format": "DD/MM/YYYY",
+      "currency": "GBP",
+      "vat_prefix": "GB",
+      "confidence_threshold": 0.80,
+      "known_issues": [
+        "Table extraction misalignment in multi-line line item rows",
+        "Handwritten signatures not extractable"
+      ],
+      "erp_system": "Microsoft Dynamics 365",
+      "contact": "it-support@poprint.co.uk"
+    },
+    {
+      "id": "CM-003",
+      "company_code": "TURBOMACH",
+      "company_name": "TurboMach Industrial",
+      "country": "US",
+      "industry": "Manufacturing",
+      "active": true,
+      "source": "company_mappings.json:CM-003",
+      "datasets": [],
+      "document_types": ["Work Order", "Quality Report", "Parts Request"],
+      "primary_language": "en",
+      "secondary_languages": ["de"],
+      "date_format": "MM/DD/YYYY",
+      "currency": "USD",
+      "vat_prefix": null,
+      "confidence_threshold": 0.80,
+      "known_issues": [
+        "Work order forms use non-standard field labels across facilities",
+        "Part numbers may include special characters"
+      ],
+      "erp_system": "Oracle ERP Cloud",
+      "contact": "systems@turbomach.com"
+    },
+    {
+      "id": "CM-004",
+      "company_code": "MDE",
+      "company_name": "MDE ERP Solutions",
+      "country": "IN",
+      "industry": "Software / ERP",
+      "active": true,
+      "source": "company_mappings.json:CM-004",
+      "datasets": [],
+      "document_types": ["Tax Invoice", "Proforma Invoice", "Service Agreement"],
+      "primary_language": "en",
+      "secondary_languages": ["hi"],
+      "date_format": "DD-MM-YYYY",
+      "currency": "INR",
+      "vat_prefix": "IN",
+      "confidence_threshold": 0.78,
+      "known_issues": [
+        "GST number format varies by state",
+        "Dual language documents (English + Hindi) may reduce OCR confidence"
+      ],
+      "erp_system": "Tally Prime",
+      "contact": "support@mdeerp.in"
+    },
+    {
+      "id": "CM-005",
+      "company_code": "ALPHALOG",
+      "company_name": "AlphaLog Freight",
+      "country": "NL",
+      "industry": "Freight & Logistics",
+      "active": true,
+      "source": "company_mappings.json:CM-005",
+      "datasets": [],
+      "document_types": ["Freight Invoice", "Customs Declaration", "Bill of Lading"],
+      "primary_language": "nl",
+      "secondary_languages": ["en", "de"],
+      "date_format": "DD-MM-YYYY",
+      "currency": "EUR",
+      "vat_prefix": "NL",
+      "confidence_threshold": 0.75,
+      "known_issues": [
+        "Customs declaration forms have strict field ordering",
+        "HS code extraction requires domain-specific model"
+      ],
+      "erp_system": "Exact Online",
+      "contact": "ict@alphalog.nl"
+    }
+  ]
+}

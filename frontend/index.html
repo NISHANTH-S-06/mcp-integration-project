@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCP Data Assistant - Read-Only Database & Dataset Chat</title>
+  <meta name="description" content="Ask questions about your database and dataset records. Read-only AI assistant powered by MCP tools and local LLM." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="app-shell" id="appShell">
+
+  <!-- === TOPBAR === -->
+  <header class="topbar">
+    <button class="icon-btn toggle-sidebar-btn" id="toggleLeftSidebar" title="Toggle Left Sidebar">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+    </button>
+    <div class="topbar-logo" onclick="switchView('chat')">
+      <div class="logo-icon">DB</div>
+    </div>
+    <div class="topbar-title">
+      <h1>Data Assistant <span class="topbar-mcp-badge">MCP</span></h1>
+      <p>Ask anything from Database &amp; Datasets - Read Only</p>
+    </div>
+    <div class="badge-readonly">Read Only Mode</div>
+    <button class="icon-btn toggle-sidebar-btn" id="toggleRightSidebar" title="Toggle Right Sidebar">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flip-x"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+    </button>
+    <button class="theme-btn" id="themeBtn" title="Toggle theme">Dark</button>
+  </header>
+
+  <!-- === LEFT SIDEBAR (NAV & HISTORY) === -->
+  <aside class="sidebar-left" id="sidebarLeft">
+    <div class="sidebar-inner">
+
+      <button class="new-chat-btn" id="newChatBtn">
+        <span>+</span> New Chat
+      </button>
+
+      <div class="sidebar-section-label">Chat</div>
+      <nav class="sidebar-nav">
+        <div class="nav-item active" id="navChat" onclick="switchView('chat')">
+          <span class="nav-icon">Chat</span> Chat Dashboard
+        </div>
+      </nav>
+
+      <div class="sidebar-section-label">Chat History</div>
+      <div class="search-box">
+        <span class="search-icon">Search</span>
+        <input type="text" id="historySearch" placeholder="Search conversations..." />
+      </div>
+      <div class="history-list" id="historyList">
+        <!-- populated by JS -->
+      </div>
+
+      <div class="sidebar-section-label">Data</div>
+      <nav class="sidebar-nav">
+        <div class="nav-item" id="navDatasets" onclick="switchView('datasets')">
+          <span class="nav-icon">Data</span> Datasets
+          <span class="nav-count" id="navDatasetCount">...</span>
+        </div>
+        <div class="nav-item" id="navCompanies" onclick="switchView('companies')">
+          <span class="nav-icon">Co</span> Companies
+          <span class="nav-count" id="navCompanyCount">...</span>
+        </div>
+        <div class="nav-item" id="navMappings" onclick="switchView('mappings')">
+          <span class="nav-icon">Map</span> Mappings
+          <span class="nav-count" id="navMappingCount">...</span>
+        </div>
+        <div class="nav-item" id="navDB" onclick="switchView('database')">
+          <span class="nav-icon">DB</span> Database (Read Only)
+          <span class="nav-count" id="navTableCount">...</span>
+        </div>
+        <div class="nav-item" id="navValidation" onclick="switchView('validation')">
+          <span class="nav-icon">OK</span> Validation Results
+        </div>
+      </nav>
+
+      <div class="sidebar-section-label">System</div>
+      <nav class="sidebar-nav">
+        <div class="nav-item" id="navStatus" onclick="switchView('status')">
+          <span class="nav-icon">Status</span> System Status
+        </div>
+        <div class="nav-item" id="navSettings" onclick="switchView('settings')">
+          <span class="nav-icon">Settings</span> Settings
+        </div>
+      </nav>
+
+      <div class="flex-spacer"></div>
+
+      <div class="sidebar-footer">
+        <div class="readonly-badge-sm">
+          <div class="rb-title">Read Only Mode</div>
+          <p>All operations are read-only.<br/>No data can be modified.</p>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- === MAIN CONTENT WRAPPER === -->
+  <div class="main-content-wrapper" id="mainContentWrapper">
+    <!-- Global warning banner (hidden by default) -->
+    <div class="warning-banner-global" id="dbMissingWarningBanner" style="display: none; background-color: #7f1d1d; color: #fecaca; padding: 12px; font-weight: 600; text-align: center; border-bottom: 1px solid #f87171;">
+      Warning Real database is not connected. Add DB to data/real_db and update .env.
+    </div>
+
+    <!-- --- 1. CHAT DASHBOARD VIEW --- -->
+    <div id="view-chat" class="app-view active">
+      <main class="chat-main" id="chatMain">
+        <!-- Welcome screen -->
+        <div class="welcome-screen" id="welcomeScreen">
+          <div class="welcome-icon">AI</div>
+          <h2>Data Assistant</h2>
+          <p>Ask questions about your database tables and dataset records.<br/>
+             All answers are sourced directly from your data - read-only, always.</p>
+
+          <div class="suggestion-grid">
+            <button class="suggestion-card" onclick="quickSearch('Search customer')">
+              <div class="sc-icon">Customer</div>
+              <div class="sc-title">Search Customer</div>
+              <div class="sc-desc">Look up customer records from the real database</div>
+            </button>
+            <button class="suggestion-card" onclick="quickSearch('Search invoice')">
+              <div class="sc-icon">Invoice</div>
+              <div class="sc-title">Search Invoice</div>
+              <div class="sc-desc">Find invoice records, or enter an exact invoice number</div>
+            </button>
+            <button class="suggestion-card" onclick="quickSearch('Search supplier')">
+              <div class="sc-icon">Supplier</div>
+              <div class="sc-title">Search Supplier</div>
+              <div class="sc-desc">Look up supplier records from the real database</div>
+            </button>
+            <button class="suggestion-card" onclick="quickSearch('Show database overview')">
+              <div class="sc-icon">DB</div>
+              <div class="sc-title">Database Overview</div>
+              <div class="sc-desc">See connected tables and record counts, read-only</div>
+            </button>
+          </div>
+          <div id="welcomeError" class="welcome-error"></div>
+        </div>
+
+        <!-- Message list -->
+        <div class="message-list hidden" id="messageList"></div>
+
+        <!-- Suggestion chips -->
+        <div class="chips-bar" id="chipsBar">
+          <span class="try-label">Try:</span>
+          <button class="chip" onclick="quickSearch('Search customer')">Search customer</button>
+          <button class="chip" onclick="quickSearch('Search invoice')">Search invoice</button>
+          <button class="chip" onclick="quickSearch('Search supplier')">Search supplier</button>
+          <button class="chip" onclick="quickSearch('Search item')">Search item</button>
+          <button class="chip" onclick="quickSearch('Enter exact invoice number')">Exact invoice number</button>
+          <button class="chip" onclick="quickSearch('Show database overview')">Show database overview</button>
+          <button class="chip" onclick="quickSearch('List database tables')">List database tables</button>
+        </div>
+
+        <!-- Input area -->
+        <div class="input-area">
+          <div class="input-wrapper">
+            <textarea id="chatInput" rows="1" placeholder="Ask anything from database or dataset..." maxlength="2000"></textarea>
+            <div class="input-actions">
+              <button class="action-btn" title="Database" onclick="switchView('database')">DB</button>
+              <button class="action-btn" title="Datasets" onclick="switchView('datasets')">Data</button>
+              <button class="action-btn" title="API Docs" onclick="window.open('http://127.0.0.1:8200/docs','_blank')">Docs</button>
+              <button class="send-btn" id="sendBtn" title="Send">Send</button>
+            </div>
+          </div>
+          <div class="input-footer">
+            This assistant can access database and dataset only - All operations are read-only
+          </div>
+        </div>
+      </main>
+
+      <!-- Right sidebar for Chat Overview panel -->
+      <aside class="sidebar-right" id="sidebarRight">
+        <div class="sidebar-inner">
+          <!-- Database Overview -->
+          <div class="info-card" id="dbCard">
+            <div class="info-card-header"><span class="ic-icon">DB</span> Database Overview</div>
+            <div class="info-row"><span class="ir-label">Database Type</span><span class="ir-value">SQLite</span></div>
+            <div class="info-row"><span class="ir-label">Database Name</span><span class="ir-value accent" id="dbFileName">Checking database...</span></div>
+            <div class="info-row"><span class="ir-label">Total Tables</span><span class="ir-value" id="dbTableCount"><div class="skeleton w-40"></div></span></div>
+            <div class="info-row"><span class="ir-label">Total Records</span><span class="ir-value" id="dbRecordCount"><div class="skeleton w-60"></div></span></div>
+            <div class="info-row"><span class="ir-label">Mode</span><span class="ir-value text-success">Read-Only</span></div>
+            <button class="view-btn" onclick="switchView('database')">View Tables -></button>
+          </div>
+
+          <!-- Dataset Overview -->
+          <div class="info-card" id="dsCard">
+            <div class="info-card-header"><span class="ic-icon">Data</span> Dataset Overview</div>
+            <div class="info-row"><span class="ir-label">Total Datasets</span><span class="ir-value" id="dsTotal"><div class="skeleton w-30"></div></span></div>
+            <div class="info-row"><span class="ir-label">Companies</span><span class="ir-value" id="dsCompanies"><div class="skeleton w-30"></div></span></div>
+            <div class="info-row"><span class="ir-label">Document Types</span><span class="ir-value" id="dsDocTypes"><div class="skeleton w-30"></div></span></div>
+            <div class="info-row"><span class="ir-label">Total Mappings</span><span class="ir-value" id="dsMappings"><div class="skeleton w-40"></div></span></div>
+            <button class="view-btn" onclick="switchView('datasets')">View Datasets -></button>
+          </div>
+
+          <!-- Recent Dataset Records -->
+          <div class="info-card">
+            <div class="info-card-header"><span class="ic-icon">Doc</span> Recent Dataset Records</div>
+            <div id="recentRecords">
+              <div class="skeleton"></div>
+              <div class="skeleton w-80-pct"></div>
+            </div>
+            <a href="#" class="view-all-link" onclick="switchView('datasets'); return false;">View all records -></a>
+          </div>
+
+        </div>
+
+          <!-- Query History (localStorage only, last 20 queries) -->
+          <div class="info-card" id="queryHistoryCard">
+            <div class="info-card-header"><span class="ic-icon">🕒</span> Query History
+              <button class="icon-btn" style="width:auto;height:auto;padding:2px 8px;font-size:11px;margin-left:auto" onclick="clearQueryHistory()" title="Clear query history">Clear</button>
+            </div>
+            <div id="queryHistoryList">
+              <div style="font-size:12px;color:var(--text-muted);padding:6px 0">No queries yet</div>
+            </div>
+          </div>
+
+          <!-- System Status -->
+          <div class="info-card" id="statusCard">
+            <div class="info-card-header"><span class="ic-icon">📡</span> System Status</div>
+            <div class="info-row"><span class="ir-label">MCP Server</span><span id="statusMCP"><div class="skeleton w-70"></div></span></div>
+            <div class="info-row"><span class="ir-label">Database</span><span id="statusDB"><div class="skeleton w-70"></div></span></div>
+            <div class="info-row"><span class="ir-label">Dataset Storage</span><span id="statusDS"><div class="skeleton w-70"></div></span></div>
+            <div class="info-row"><span class="ir-label">Read Only Mode</span><span id="statusRO"><div class="skeleton w-50"></div></span></div>
+            <div class="info-row"><span class="ir-label">Ollama LLM</span><span id="statusOllama"><div class="skeleton w-70"></div></span></div>
+            <div class="info-row no-border-bottom"><span class="ir-label">🟢 Uptime</span><span class="ir-value" id="statusUptime">…</span></div>
+          </div>
+
+          <!-- Real MCP Server Status -->
+          <div class="info-card" id="realMcpStatusCard">
+            <div class="info-card-header"><span class="ic-icon">Tools</span> Real MCP Server</div>
+            <div class="info-row"><span class="ir-label">Status</span><span id="mcpRealStatus"><span class="status-badge status-offline">Checking...</span></span></div>
+            <div class="info-row"><span class="ir-label">Transport</span><span class="ir-value" id="mcpRealTransport">-</span></div>
+            <div class="info-row no-border-bottom"><span class="ir-label">Tools Registered</span><span class="ir-value" id="mcpRealToolsCount">-</span></div>
+          </div>
+
+          <!-- Ollama Status -->
+          <div class="info-card" id="ollamaStatusCard">
+            <div class="info-card-header"><span class="ic-icon">Ollama</span> Ollama LLM</div>
+            <div class="info-row"><span class="ir-label">Status</span><span id="ollamaRealStatus"><span class="status-badge status-offline">Checking...</span></span></div>
+            <div class="info-row"><span class="ir-label">Model</span><span class="ir-value accent" id="ollamaRealModel">-</span></div>
+            <div class="info-row no-border-bottom"><span class="ir-label">Timeout</span><span class="ir-value" id="ollamaRealTimeout">-</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ─── 2. DATASET EXPLORER VIEW ─── -->
+    <div id="view-datasets" class="app-view">
+      <div class="view-header">
+        <h2>Dataset Explorer</h2>
+        <p>Explore read-only structured data files stored in the dataset directory</p>
+      </div>
+
+      <!-- Metric Grid -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="mc-icon">📂</div>
+          <div class="mc-content">
+            <span class="mc-label">Total Datasets</span>
+            <span class="mc-value" id="datasets-metric-total">0</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-icon">CSV</div>
+          <div class="mc-content">
+            <span class="mc-label">Total Records</span>
+            <span class="mc-value" id="datasets-metric-records">0</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-icon">Co</div>
+          <div class="mc-content">
+            <span class="mc-label">Companies</span>
+            <span class="mc-value" id="datasets-metric-companies">0</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-icon">Map</div>
+          <div class="mc-content">
+            <span class="mc-label">Total Mappings</span>
+            <span class="mc-value" id="datasets-metric-mappings">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filters-bar">
+        <div class="fb-search-wrapper">
+          <span class="fb-search-icon">Search</span>
+          <input type="text" id="datasets-search" placeholder="Search datasets..." />
+        </div>
+        <select id="datasets-filter-company" title="Filter datasets by company">
+          <option value="">All Companies</option>
+        </select>
+        <select id="datasets-filter-doctype" title="Filter datasets by document type">
+          <option value="">All Document Types</option>
+        </select>
+        <button class="filters-btn" id="datasets-clear-filters">Reset Filters</button>
+      </div>
+
+      <!-- Main Table -->
+      <div class="table-container flex-grow">
+        <table class="premium-table" id="datasets-table">
+          <thead>
+            <tr>
+              <th>Dataset Name</th>
+              <th>Company</th>
+              <th>Document Type</th>
+              <th>Records</th>
+              <th>Size</th>
+              <th>Source Reference</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="7" class="loading-td"><div class="skeleton-row"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Bottom Panel (Side-by-side JSON preview and Detail card) -->
+      <div class="bottom-split-panel">
+        <div class="panel-preview">
+          <div class="panel-header">
+            <h3>Preview (First Record)</h3>
+            <span class="panel-badge">JSON</span>
+          </div>
+          <div class="json-code-container">
+            <pre><code id="dataset-record-preview" class="language-json">{ "select_a_dataset": "Click 'View Details' on any table row to see its JSON record preview here." }</code></pre>
+          </div>
+        </div>
+        <div class="panel-details">
+          <div class="panel-header">
+            <h3>Dataset Details</h3>
+          </div>
+          <div class="detail-rows">
+            <div class="detail-row"><span class="dr-label">Name</span><span class="dr-value" id="ds-details-name">-</span></div>
+            <div class="detail-row"><span class="dr-label">Company Code</span><span class="dr-value" id="ds-details-company">-</span></div>
+            <div class="detail-row"><span class="dr-label">Document Type</span><span class="dr-value" id="ds-details-doctype">-</span></div>
+            <div class="detail-row"><span class="dr-label">Total Records</span><span class="dr-value" id="ds-details-records">-</span></div>
+            <div class="detail-row"><span class="dr-label">File Type</span><span class="dr-value" id="ds-details-ext">-</span></div>
+            <div class="detail-row"><span class="dr-label">Average Confidence</span><span class="dr-value" id="ds-details-confidence">-</span></div>
+            <div class="detail-row"><span class="dr-label">Last Updated</span><span class="dr-value" id="ds-details-updated">-</span></div>
+          </div>
+          <button class="action-submit-btn" id="ds-view-full-btn" disabled>Query Dataset in Chat</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- --- 3. COMPANIES VIEW --- -->
+    <div id="view-companies" class="app-view">
+      <div class="view-header">
+        <h2>Companies</h2>
+        <p>Manage and view all companies registered in the local database schema</p>
+      </div>
+
+      <div class="filters-bar">
+        <div class="fb-search-wrapper fb-search-max-w">
+          <span class="fb-search-icon">Search</span>
+          <input type="text" id="companies-search" placeholder="Search companies..." />
+        </div>
+        <button class="filters-btn" id="companies-refresh-btn">Refresh Refresh</button>
+      </div>
+
+      <div class="table-container">
+        <table class="premium-table" id="companies-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Company Code</th>
+              <th>Company Name</th>
+              <th>Datasets Count</th>
+              <th>Mappings Count</th>
+              <th>Document Types</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="7" class="loading-td"><div class="skeleton-row"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- --- 4. MAPPINGS VIEW --- -->
+    <div id="view-mappings" class="app-view">
+      <div class="view-header">
+        <h2>Field Mappings</h2>
+        <p>Aliases and expected target destination matching mappings for document fields</p>
+      </div>
+
+      <div class="filters-bar">
+        <div class="fb-search-wrapper">
+          <span class="fb-search-icon">Search</span>
+          <input type="text" id="mappings-search" placeholder="Search mappings..." />
+        </div>
+        <select id="mappings-filter-company" title="Filter mappings by company">
+          <option value="">All Companies</option>
+        </select>
+        <select id="mappings-filter-doctype" title="Filter mappings by document type">
+          <option value="">All Document Types</option>
+        </select>
+        <button class="filters-btn" id="mappings-clear-filters">Reset Filters</button>
+      </div>
+
+      <div class="table-container">
+        <table class="premium-table" id="mappings-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Field Name</th>
+              <th>Mapped To (Target)</th>
+              <th>Company</th>
+              <th>Document Type</th>
+              <th>Aliases / Regex Patterns</th>
+              <th>Confidence</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="8" class="loading-td"><div class="skeleton-row"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination-footer">
+        <span id="mappings-pagination-info">Showing 0 to 0 of 0 mappings</span>
+        <div class="pagination-btns">
+          <button class="page-btn" id="mappings-prev-page" disabled>< Prev</button>
+          <button class="page-btn" id="mappings-next-page" disabled>Next ></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- --- 5. VALIDATION RESULTS VIEW --- -->
+    <div id="view-validation" class="app-view">
+      <div class="view-header">
+        <h2>Validation Results</h2>
+        <p>OCR validation metrics, expected patterns, match statuses, and failure reason diagnostic data</p>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card validation-card total">
+          <div class="mc-icon">Copy</div>
+          <div class="mc-content">
+            <span class="mc-label">Total Validations</span>
+            <span class="mc-value" id="val-metric-total">0</span>
+          </div>
+        </div>
+        <div class="metric-card validation-card passed">
+          <div class="mc-icon">OK</div>
+          <div class="mc-content">
+            <span class="mc-label">Passed</span>
+            <span class="mc-value" id="val-metric-passed">0</span>
+          </div>
+        </div>
+        <div class="metric-card validation-card warnings">
+          <div class="mc-icon">Warning</div>
+          <div class="mc-content">
+            <span class="mc-label">Warnings</span>
+            <span class="mc-value" id="val-metric-warnings">0</span>
+          </div>
+        </div>
+        <div class="metric-card validation-card failed">
+          <div class="mc-icon">Fail</div>
+          <div class="mc-content">
+            <span class="mc-label">Failed</span>
+            <span class="mc-value" id="val-metric-failed">0</span>
+          </div>
+        </div>
+        <div class="metric-card validation-card warning">
+          <div class="mc-icon">Search</div>
+          <div class="mc-content">
+            <span class="mc-label">Low Confidence Fields</span>
+            <span class="mc-value mc-value-wrap" id="val-metric-low-confidence">None</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="filters-bar">
+        <div class="fb-search-wrapper fb-search-max-w">
+          <span class="fb-search-icon">Search</span>
+          <input type="text" id="validation-search" placeholder="Search validation runs..." />
+        </div>
+        <button class="filters-btn" id="validation-refresh-btn">Refresh Refresh Logs</button>
+      </div>
+
+      <div class="table-container">
+        <table class="premium-table" id="validation-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Upload ID</th>
+              <th>Company</th>
+              <th>Document Type</th>
+              <th>Field Name</th>
+              <th>Extracted Value</th>
+              <th>Expected Pattern</th>
+              <th>Confidence</th>
+              <th>Status</th>
+              <th>Failure Diagnostics</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="10" class="loading-td"><div class="skeleton-row"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- --- 6. DATABASE OVERVIEW VIEW --- -->
+    <div id="view-database" class="app-view">
+      <div class="view-header">
+        <h2>Database Overview</h2>
+        <p>Explore read-only SQLite schema tables, record counts, and database metadata</p>
+      </div>
+
+      <!-- Manual Database Search -->
+      <div class="filters-bar" style="margin-bottom: 20px; padding: 16px; background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border); gap: 12px; width: 100%; box-sizing: border-box;">
+        <div class="fb-search-wrapper" style="flex: 1;">
+          <span class="fb-search-icon">Search</span>
+          <input type="text" id="manual-db-search-input" placeholder="Search customer, invoice, supplier, item, schema, or exact value..." title="Enter search term" />
+        </div>
+        <button class="filters-btn" id="manual-db-search-btn">Search</button>
+      </div>
+      <div id="manual-db-search-results" style="display: none; margin-bottom: 20px; padding: 16px; background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border); max-height: 400px; overflow-y: auto;">
+        <!-- Results will be loaded here dynamically -->
+      </div>
+
+      <div class="database-split-layout">
+        <!-- Tables list sidebar -->
+        <div class="db-tables-list-sidebar">
+          <h3>Tables</h3>
+          <input type="text" id="db-tables-filter-input" class="db-tables-filter-input" placeholder="Filter tables..." oninput="filterDbTablesList(this.value)" />
+          <div class="db-tables-nav" id="db-tables-nav-list">
+            <!-- Populated by JS -->
+            <div class="skeleton skeleton-table-nav"></div>
+            <div class="skeleton skeleton-table-nav"></div>
+            <div class="skeleton skeleton-table-nav"></div>
+          </div>
+        </div>
+
+        <!-- Main Schema detail table -->
+        <div class="db-table-details-main">
+          <div class="db-detail-header">
+            <div>
+              <h3 id="db-current-table-name">Select a Table</h3>
+              <p id="db-current-table-meta">Select a table from the sidebar to inspect its structure and columns</p>
+            </div>
+            <span class="db-details-badge" id="db-current-table-records">0 rows</span>
+          </div>
+
+          <div class="table-container">
+            <table class="premium-table" id="db-schema-table">
+              <thead>
+                <tr>
+                  <th>CID</th>
+                  <th>Column Name</th>
+                  <th>Data Type</th>
+                  <th>Not Null</th>
+                  <th>Primary Key</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="5" class="text-center text-secondary">Please select a table to explore.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Table Content Preview -->
+          <div class="db-table-preview-section">
+            <h4>Data Sample (Top 5 Rows)</h4>
+            <div class="table-container">
+              <table class="premium-table mini" id="db-data-preview-table">
+                <thead>
+                  <tr><th>Data Sample</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td class="text-secondary">No table selected</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right sidebar: Status & Config parameters -->
+        <div class="db-status-sidebar">
+          <div class="info-card gradient-accent">
+            <div class="connection-status-title">DB SQLite Connection</div>
+            <div class="connection-status-badge" id="db-conn-status">Connected Securely</div>
+            <p>Database mode is strictly read-only. No write operations can execute.</p>
+            <div class="info-row"><span class="ir-label">Mode</span><span class="ir-value" id="db-meta-mode">Checking...</span></div>
+            <div class="info-row"><span class="ir-label">DB Connected</span><span class="ir-value" id="db-meta-connected">...</span></div>
+            <div class="info-row"><span class="ir-label">File</span><span class="ir-value" id="db-meta-file">Checking database...</span></div>
+            <div class="info-row"><span class="ir-label">Demo Data Active</span><span class="ir-value" id="db-meta-demo-active">...</span></div>
+            <div class="info-row"><span class="ir-label">Total Tables</span><span class="ir-value" id="db-meta-tables">0</span></div>
+            <div class="info-row"><span class="ir-label">Total Records</span><span class="ir-value" id="db-meta-records">0</span></div>
+            <div class="info-row"><span class="ir-label">Dataset Folder</span><span class="ir-value" id="db-meta-dataset-folder">-</span></div>
+            <div class="info-row"><span class="ir-label">Import Registry</span><span class="ir-value" id="db-meta-import-registry">-</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- --- 7. SYSTEM STATUS VIEW --- -->
+    <div id="view-status" class="app-view">
+      <div class="view-header">
+        <h2>System Status</h2>
+        <p>Monitor status checkpoints, system components, integrations, and server details</p>
+      </div>
+
+      <div class="status-grid">
+        <!-- Shield operational badge -->
+        <div class="status-shield-card">
+          <div class="shield-icon">Read Only</div>
+          <div class="shield-text">
+            <h3>All Systems Operational</h3>
+            <p>Read-only dataset matching processes are performing nominally.</p>
+          </div>
+        </div>
+
+        <!-- Services parameters -->
+        <div class="status-panel-card">
+          <h3>Services Checkpoint</h3>
+          <div class="services-list">
+            <div class="service-status-row">
+              <span class="ssr-name">API backend server</span>
+              <span class="ssr-status online" id="sys-status-api">Online</span>
+            </div>
+            <div class="service-status-row">
+              <span class="ssr-name">SQLite database reader</span>
+              <span class="ssr-status online" id="sys-status-db">Connected</span>
+            </div>
+            <div class="service-status-row">
+              <span class="ssr-name">Dataset directory access</span>
+              <span class="ssr-status online" id="sys-status-ds">Connected</span>
+            </div>
+            <div class="service-status-row">
+              <span class="ssr-name">Ollama local LLM service</span>
+              <span class="ssr-status online" id="sys-status-ollama">Active</span>
+            </div>
+            <div class="service-status-row">
+              <span class="ssr-name">Strict read-only safety guard</span>
+              <span class="ssr-status active">Active</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- System environment stats -->
+        <div class="status-panel-card">
+          <h3>Environment Properties</h3>
+          <div class="detail-rows">
+            <div class="detail-row"><span class="dr-label">MCP Mode</span><span class="dr-value" id="sys-env-mcp-mode">unknown</span></div>
+            <div class="detail-row"><span class="dr-label">DB Connected</span><span class="dr-value" id="sys-env-db-connected">unknown</span></div>
+            <div class="detail-row"><span class="dr-label">DB File Name</span><span class="dr-value" id="sys-env-db-file">-</span></div>
+            <div class="detail-row"><span class="dr-label">Demo Data Active</span><span class="dr-value" id="sys-env-demo-active">unknown</span></div>
+            <div class="detail-row"><span class="dr-label">Tables Count</span><span class="dr-value" id="sys-env-table-count">0</span></div>
+            <div class="detail-row"><span class="dr-label">Records Count</span><span class="dr-value" id="sys-env-records-count">0</span></div>
+            <div class="detail-row"><span class="dr-label">Dataset Folder Status</span><span class="dr-value" id="sys-env-dataset-folder">-</span></div>
+            <div class="detail-row"><span class="dr-label">Import Registry Status</span><span class="dr-value" id="sys-env-import-registry">-</span></div>
+            <div class="detail-row"><span class="dr-label">Read Only Mode</span><span class="dr-value text-success" id="sys-env-readonly">Active</span></div>
+            <div class="detail-row"><span class="dr-label">MCP Tools Registered</span><span class="dr-value" id="sys-env-mcp-tools">0</span></div>
+          </div>
+        </div>
+
+        <!-- Health and uptime card -->
+        <div class="status-panel-card">
+          <h3>System Health Checks</h3>
+          <div class="detail-rows">
+            <div class="detail-row"><span class="dr-label">Uptime</span><span class="dr-value" id="sys-health-uptime">-</span></div>
+            <div class="detail-row"><span class="dr-label">Check Frequency</span><span class="dr-value">Every 30s</span></div>
+            <div class="detail-row"><span class="dr-label">Network Latency</span><span class="dr-value">&lt; 2ms</span></div>
+            <div class="detail-row"><span class="dr-label">CPU Usage</span><span class="dr-value">Nominal</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- --- 8. SETTINGS VIEW --- -->
+    <div id="view-settings" class="app-view">
+      <div class="view-header">
+        <h2>Settings</h2>
+        <p>Configure dashboard displays, interface themes, and explore software versions</p>
+      </div>
+
+      <div class="settings-layout">
+        <!-- Settings Sidebar -->
+        <div class="settings-nav">
+          <div class="settings-nav-item active" id="set-nav-general" onclick="switchSettingsCategory('general')">Settings General</div>
+          <div class="settings-nav-item" id="set-nav-notifications" onclick="switchSettingsCategory('notifications')">Notify Notifications</div>
+          <div class="settings-nav-item" id="set-nav-integrations" onclick="switchSettingsCategory('integrations')">Integrations Integrations</div>
+          <div class="settings-nav-item" id="set-nav-security" onclick="switchSettingsCategory('security')">Read Only Security</div>
+        </div>
+
+        <!-- Settings central content panel -->
+        <div class="settings-main-pane">
+          <!-- General Settings -->
+          <div class="settings-section active" id="set-sect-general">
+            <h3>General Settings</h3>
+            <p>Customize user interface visual adjustments</p>
+            <hr class="settings-divider" />
+
+            <div class="settings-control-row">
+              <div class="settings-control-info">
+                <h4>Read Only Mode</h4>
+                <p>Enforce strict read-only mode for safety. Prevents write commands from reaching the database.</p>
+              </div>
+              <div class="settings-control-action">
+                <label class="switch-toggle">
+                  <input type="checkbox" id="settings-ro-toggle" checked disabled title="Read Only Mode Toggle" />
+                  <span class="slider-round"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="settings-control-row">
+              <div class="settings-control-info">
+                <h4>Dark Mode Palette</h4>
+                <p>Toggle display theme settings. Adapts color palettes instantly.</p>
+              </div>
+              <div class="settings-control-action">
+                <select id="settings-theme-select" title="Select application theme">
+                  <option value="dark">Dark Theme (Default)</option>
+                  <option value="light">Light Theme</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="settings-control-row">
+              <div class="settings-control-info">
+                <h4>Date formatting</h4>
+                <p>Configure timestamp labels formats displayed inside logs tables.</p>
+              </div>
+              <div class="settings-control-action">
+                <select id="settings-date-select" title="Select date format">
+                  <option value="YYYY-MM-DD">YYYY-MM-DD (Standard)</option>
+                  <option value="DD/MM/YYYY">DD/MM/YYYY (Europe)</option>
+                  <option value="MM/DD/YYYY">MM/DD/YYYY (USA)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="settings-control-row">
+              <div class="settings-control-info">
+                <h4>Local Time Zone</h4>
+                <p>Set time parameters values.</p>
+              </div>
+              <div class="settings-control-action">
+                <select id="settings-timezone-select" title="Select local time zone">
+                  <option value="UTC">UTC (Coordinated Time)</option>
+                  <option value="local">User Local Time</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Placeholder Settings for other categories -->
+          <div class="settings-section" id="set-sect-notifications">
+            <h3>Notifications</h3>
+            <p>Notification properties are currently disabled in Read-Only Mode.</p>
+          </div>
+          <div class="settings-section" id="set-sect-integrations">
+            <h3>API & Integrations</h3>
+            <p>API access links and endpoint mapping routes.</p>
+            <div class="detail-rows margin-top-16">
+              <div class="detail-row"><span class="dr-label">FastAPI Documentation</span><span class="dr-value"><a href="http://127.0.0.1:8200/docs" target="_blank" rel="noopener noreferrer" class="link-accent">Swagger UI (/docs)</a></span></div>
+              <div class="detail-row"><span class="dr-label">Alternate Docs API</span><span class="dr-value"><a href="http://127.0.0.1:8200/redoc" target="_blank" rel="noopener noreferrer" class="link-accent">Redoc (/redoc)</a></span></div>
+              <div class="detail-row"><span class="dr-label">FastAPI Server</span><span class="dr-value">http://127.0.0.1:8200</span></div>
+            </div>
+          </div>
+          <div class="settings-section" id="set-sect-security">
+            <h3>Security</h3>
+            <p>System credentials, write intent safety rules, and validation checks logs overview.</p>
+          </div>
+        </div>
+
+        <!-- Settings Info Sidebar -->
+        <div class="settings-info-sidebar">
+          <div class="info-card">
+            <div class="info-card-header">System Data Assistant (MCP)</div>
+            <div class="info-row"><span class="ir-label">Version</span><span class="ir-value">1.0.0</span></div>
+            <div class="info-row"><span class="ir-label">Environment</span><span class="ir-value">Production</span></div>
+            <div class="info-row"><span class="ir-label">Build Date</span><span class="ir-value">May 15, 2024</span></div>
+            <div class="text-copyright">
+              &copy; 2026 Data Assistant. All rights reserved.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main-content-wrapper -->
+
+</div><!-- /app-shell -->
+
+<script src="app.js"></script>
+</body>
+</html>
