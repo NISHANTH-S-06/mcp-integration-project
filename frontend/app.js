@@ -1455,7 +1455,7 @@ function quickSearch(text) {
   if (text === 'Enter exact invoice number') {
     if (chatInput) {
       chatInput.value = '';
-      chatInput.placeholder = 'TVL25000001';
+      chatInput.placeholder = 'ABC25000001';
       chatInput.focus();
     }
     return;

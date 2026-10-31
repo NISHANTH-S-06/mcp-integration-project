@@ -226,7 +226,7 @@ _EXACT_VALUE_PRIORITY_KEYWORDS = [
 
 def _is_exact_value_like(query: str) -> bool:
     """Heuristic: detect single-token alphanumeric codes like
-    TVL25000001, ARM25000001, PO12345, CUST001 (no spaces, has a digit).
+    ABC25000001, ARM25000001, PO12345, CUST001 (no spaces, has a digit).
     """
     q = (query or "").strip()
     if not q or " " in q:

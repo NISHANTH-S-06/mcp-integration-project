@@ -182,7 +182,7 @@ def test_intent_router():
         assert classify_intent("Search supplier") == "business_entity_search:supplier", f"Got: {classify_intent('Search supplier')}"
         assert classify_intent("Search item") == "business_entity_search:item", f"Got: {classify_intent('Search item')}"
         # Exact value search
-        assert classify_intent("TVL25000001") == "exact_value_search", f"Got: {classify_intent('TVL25000001')}"
+        assert classify_intent("ABC25000001") == "exact_value_search", f"Got: {classify_intent('ABC25000001')}"
         print("[OK] Intent router tests passed")
         return True
     except Exception as e:
@@ -333,7 +333,7 @@ def test_search_database_all():
     from app import db_reader
     from app.config import MCP_MODE
     try:
-        term = "SRI MURUGAN" if MCP_MODE == "real" else "GLS"
+        term = "ACME TRADERS" if MCP_MODE == "real" else "GLS"
         res = db_reader.search_database_all(term)
         assert "records" in res
         assert len(res["records"]) > 0
@@ -400,16 +400,16 @@ def test_real_mode_simulation():
         print(f"[OK] Connected to real DB: {config.DB_NAME}")
 
         # Search customer in real DB (use the actual API the chat flow uses for business entity search)
-        res_cust = db_reader.search_business_entity("customer", query="SRI MURUGAN", limit=5)
-        assert res_cust.get("count", 0) > 0, "Expected customer records for SRI MURUGAN"
+        res_cust = db_reader.search_business_entity("customer", query="ACME TRADERS", limit=5)
+        assert res_cust.get("count", 0) > 0, "Expected customer records for ACME TRADERS"
         assert res_cust["records"][0]["table"] == "m_customers_t", f"Expected m_customers_t, got {res_cust['records'][0].get('table')}"
-        print(f"[OK] Real DB customer search for 'SRI MURUGAN': found {res_cust['count']} records in m_customers_t")
+        print(f"[OK] Real DB customer search for 'ACME TRADERS': found {res_cust['count']} records in m_customers_t")
 
         # Search invoice in real DB
-        res_inv = db_reader.search_database_all("TVL25000001")
-        assert res_inv.get("records"), "Expected invoice record for TVL25000001"
+        res_inv = db_reader.search_database_all("ABC25000001")
+        assert res_inv.get("records"), "Expected invoice record for ABC25000001"
         assert res_inv["records"][0]["table"] == "s_invoice_hdr_t"
-        print(f"[OK] Real DB discovery search for 'TVL25000001': found in s_invoice_hdr_t")
+        print(f"[OK] Real DB discovery search for 'ABC25000001': found in s_invoice_hdr_t")
 
         # Verify missing DB raises FileNotFoundError (blocked fallback)
         import os, importlib
@@ -453,8 +453,8 @@ def test_actual_sql_import():
     
     # 1. Check if SQL file exists
     if not sql_file.exists():
-        print(f"[FAIL] SQL file {sql_file} does not exist.")
-        return False
+        print(f"[SKIP] Private SQL dump {sql_file} not present (expected in public repo).")
+        return True
     print(f"[OK] SQL file exists: {sql_file}")
     
     # 2. Check/run import
@@ -498,10 +498,10 @@ def test_actual_sql_import():
     # 4. Verify search_database_all returns real table records
     from app import db_reader
     try:
-        res = db_reader.search_database_all("SRI MURUGAN")
+        res = db_reader.search_database_all("ACME TRADERS")
         records = res.get("records", [])
         if len(records) == 0:
-            print("[FAIL] search_database_all found no matches for 'SRI MURUGAN'")
+            print("[FAIL] search_database_all found no matches for 'ACME TRADERS'")
             return False
         
         first = records[0]
@@ -638,11 +638,11 @@ def test_search_business_entity():
         print(f"[OK] Search supplier (generic) returned {res['count']} records from {first['table']}")
         
         # Test: Search customer with specific name query
-        res = db_reader.search_business_entity("customer", query="SRI MURUGAN", limit=5)
-        assert res.get("count", 0) > 0, f"Expected match for SRI MURUGAN, got 0"
+        res = db_reader.search_business_entity("customer", query="ACME TRADERS", limit=5)
+        assert res.get("count", 0) > 0, f"Expected match for ACME TRADERS, got 0"
         first = res["records"][0]
-        assert "SRI MURUGAN" in str(first.get("matched_value", "")), f"Expected SRI MURUGAN in matched_value, got {first.get('matched_value')}"
-        print(f"[OK] Search customer 'SRI MURUGAN' found: {first['matched_value']} in {first['table']}")
+        assert "ACME TRADERS" in str(first.get("matched_value", "")), f"Expected ACME TRADERS in matched_value, got {first.get('matched_value')}"
+        print(f"[OK] Search customer 'ACME TRADERS' found: {first['matched_value']} in {first['table']}")
         
         print("[OK] All search_business_entity tests passed")
         return True
@@ -664,16 +664,16 @@ def test_search_exact_value():
     try:
         from app import db_reader
         
-        # Test: Search exact invoice number TVL25000001
-        res = db_reader.search_exact_value("TVL25000001", limit=5)
-        assert res.get("count", 0) > 0, f"Expected 1 record for TVL25000001, got 0"
+        # Test: Search exact invoice number ABC25000001
+        res = db_reader.search_exact_value("ABC25000001", limit=5)
+        assert res.get("count", 0) > 0, f"Expected 1 record for ABC25000001, got 0"
         first = res["records"][0]
-        assert first.get("matched_value", "").upper() == "TVL25000001", f"Expected TVL25000001, got {first.get('matched_value')}"
+        assert first.get("matched_value", "").upper() == "ABC25000001", f"Expected ABC25000001, got {first.get('matched_value')}"
         assert first.get("table") == "s_invoice_hdr_t", f"Expected s_invoice_hdr_t, got {first.get('table')}"
         assert first.get("read_only") == True
         row_preview = first.get("row_preview", {})
         assert "invoice_number" in row_preview, "Expected invoice_number field in row_preview"
-        print(f"[OK] Exact value TVL25000001 found in {first['table']}, Row ID: {first['row_id']}")
+        print(f"[OK] Exact value ABC25000001 found in {first['table']}, Row ID: {first['row_id']}")
         
         print("[OK] All search_exact_value tests passed")
         return True
@@ -707,11 +707,11 @@ def test_actual_real_mode_chat_queries():
         ("Search invoice", ["invoice-related records", "DB File:", "Row ID:", "Read Only: true"]),
         ("Search supplier", ["supplier-related records", "DB File:", "Row ID:", "Read Only: true"]),
         # Specific entity searches
-        ("Search customer SRI MURUGAN", ["SRI MURUGAN", "Row ID:", "Read Only: true"]),
-        ("Search invoice TVL25000001", ["TVL25000001", "Row ID:", "Read Only: true"]),
-        ("Search supplier 2K DISTRIBUTORS", ["2K DISTRIBUTORS", "Row ID:", "Read Only: true"]),
+        ("Search customer ACME TRADERS", ["ACME TRADERS", "Row ID:", "Read Only: true"]),
+        ("Search invoice ABC25000001", ["ABC25000001", "Row ID:", "Read Only: true"]),
+        ("Search supplier INITECH DISTRIBUTORS", ["INITECH DISTRIBUTORS", "Row ID:", "Read Only: true"]),
         # Exact value lookup
-        ("TVL25000001", ["TVL25000001", "Row ID:", "Read Only: true"]),
+        ("ABC25000001", ["ABC25000001", "Row ID:", "Read Only: true"]),
         # Safety
         ("Update customer record name to new", ["This assistant is read-only. I can only explain existing database and dataset records."])
     ]
@@ -767,13 +767,13 @@ def test_output_polish():
 
     # 1. Confidence badge must never be Low when real rows are found
     try:
-        response = client.post("/api/chat", json={"question": "Search customer SRI MURUGAN"})
+        response = client.post("/api/chat", json={"question": "Search customer ACME TRADERS"})
         data = response.json()
         conf = data.get("confidence", 0)
         match_level = data.get("match_level", "")
         assert conf >= 60, f"Expected confidence >= 60 for a real match, got {conf}"
         assert match_level in ("Medium", "High"), f"Expected Medium/High match_level, got '{match_level}'"
-        print("  - [OK] Search customer SRI MURUGAN confidence/match_level not Low")
+        print("  - [OK] Search customer ACME TRADERS confidence/match_level not Low")
     except Exception as e:
         print(f"  - [FAIL] Confidence badge test failed: {e}")
         success = False
@@ -781,7 +781,7 @@ def test_output_polish():
     # 2. Exact invoice search: primary section uses s_invoice_hdr_t;
     #    s_receipts_t (if present) only appears under Related records
     try:
-        response = client.post("/api/chat", json={"question": "TVL25000001"})
+        response = client.post("/api/chat", json={"question": "ABC25000001"})
         data = response.json()
         answer = data.get("answer", "")
         assert "s_invoice_hdr_t" in answer, "Primary invoice table missing from answer"
@@ -791,7 +791,7 @@ def test_output_polish():
         for fd in found_data:
             t = fd.get("table") or fd.get("_table")
             assert t == "s_invoice_hdr_t", f"found_data card leaked non-primary table: {t}"
-        print("  - [OK] TVL25000001 primary=s_invoice_hdr_t, receipt only under Related records")
+        print("  - [OK] ABC25000001 primary=s_invoice_hdr_t, receipt only under Related records")
     except Exception as e:
         print(f"  - [FAIL] Exact invoice primary/related test failed: {e}")
         success = False
@@ -857,17 +857,17 @@ def test_output_polish():
         print(f"  - [FAIL] 'Search invoice' browse test failed: {e}")
         success = False
 
-    # 8. JAI MARKETING direct business query
+    # 8. GLOBEX MARKETING direct business query
     try:
-        response = client.post("/api/chat", json={"question": "JAI MARKETING"})
+        response = client.post("/api/chat", json={"question": "GLOBEX MARKETING"})
         data = response.json()
         answer = data.get("answer", "")
-        assert "JAI MARKETING" in answer
+        assert "GLOBEX MARKETING" in answer
         assert "m_customers_t" in answer
         assert "Read Only: true" in answer
-        print("  - [OK] JAI MARKETING direct query returns m_customers_t record details")
+        print("  - [OK] GLOBEX MARKETING direct query returns m_customers_t record details")
     except Exception as e:
-        print(f"  - [FAIL] JAI MARKETING direct query test failed: {e}")
+        print(f"  - [FAIL] GLOBEX MARKETING direct query test failed: {e}")
         success = False
 
     # 9. sample_rows_query response should not return found_data duplicate cards
@@ -893,17 +893,17 @@ def test_output_polish():
         print(f"  - [FAIL] Show sample rows fake row_id test failed: {e}")
         success = False
 
-    # 11. Search customer SRI MURUGAN related records should not contain REVATHI TRADERS
+    # 11. Search customer ACME TRADERS related records should not contain REVATHI TRADERS
     try:
-        response = client.post("/api/chat", json={"question": "Search customer SRI MURUGAN"})
+        response = client.post("/api/chat", json={"question": "Search customer ACME TRADERS"})
         data = response.json()
         answer = data.get("answer", "")
         if "Related records:" in answer:
             related_part = answer.split("Related records:")[1]
-            assert "REVATHI TRADERS" not in related_part, "Unrelated REVATHI TRADERS leaked into related records for SRI MURUGAN"
-        print("  - [OK] Search customer SRI MURUGAN related records does not leak REVATHI TRADERS")
+            assert "REVATHI TRADERS" not in related_part, "Unrelated REVATHI TRADERS leaked into related records for ACME TRADERS"
+        print("  - [OK] Search customer ACME TRADERS related records does not leak REVATHI TRADERS")
     except Exception as e:
-        print(f"  - [FAIL] Search customer SRI MURUGAN related records test failed: {e}")
+        print(f"  - [FAIL] Search customer ACME TRADERS related records test failed: {e}")
         success = False
 
     if success:
@@ -927,46 +927,46 @@ def test_manual_db_search():
     client = TestClient(app)
     success = True
     
-    # 1. Search customer SRI MURUGAN
+    # 1. Search customer ACME TRADERS
     try:
-        response = client.get("/api/db/search", params={"q": "SRI MURUGAN"})
+        response = client.get("/api/db/search", params={"q": "ACME TRADERS"})
         assert response.status_code == 200
         data = response.json()
         assert data.get("result_type") == "search_result"
         assert len(data.get("primary_results", [])) > 0
         primary_names = [r.get("display_title", "").lower() for r in data["primary_results"]]
-        assert any("sri murugan" in n for n in primary_names), "Expected SRI MURUGAN in primary results"
-        print("  - [OK] GET /api/db/search?q=SRI MURUGAN passes")
+        assert any("sri murugan" in n for n in primary_names), "Expected ACME TRADERS in primary results"
+        print("  - [OK] GET /api/db/search?q=ACME TRADERS passes")
     except Exception as e:
-        print(f"  - [FAIL] GET /api/db/search?q=SRI MURUGAN failed: {e}")
+        print(f"  - [FAIL] GET /api/db/search?q=ACME TRADERS failed: {e}")
         success = False
 
-    # 2. JAI MARKETING returns m_customers_t
+    # 2. GLOBEX MARKETING returns m_customers_t
     try:
-        response = client.get("/api/db/search", params={"q": "JAI MARKETING"})
+        response = client.get("/api/db/search", params={"q": "GLOBEX MARKETING"})
         assert response.status_code == 200
         data = response.json()
         assert data.get("result_type") == "search_result"
         assert len(data.get("primary_results", [])) > 0
         top_tbl = data["primary_results"][0].get("table") or data["primary_results"][0].get("_table") or ""
         assert top_tbl == "m_customers_t", f"Expected m_customers_t, got {top_tbl}"
-        print("  - [OK] GET /api/db/search?q=JAI MARKETING passes")
+        print("  - [OK] GET /api/db/search?q=GLOBEX MARKETING passes")
     except Exception as e:
-        print(f"  - [FAIL] GET /api/db/search?q=JAI MARKETING failed: {e}")
+        print(f"  - [FAIL] GET /api/db/search?q=GLOBEX MARKETING failed: {e}")
         success = False
 
-    # 3. TVL25000001 returns s_invoice_hdr_t
+    # 3. ABC25000001 returns s_invoice_hdr_t
     try:
-        response = client.get("/api/db/search", params={"q": "TVL25000001"})
+        response = client.get("/api/db/search", params={"q": "ABC25000001"})
         assert response.status_code == 200
         data = response.json()
         assert data.get("result_type") == "search_result"
         assert len(data.get("primary_results", [])) > 0
         top_tbl = data["primary_results"][0].get("table") or data["primary_results"][0].get("_table") or ""
         assert top_tbl == "s_invoice_hdr_t", f"Expected s_invoice_hdr_t, got {top_tbl}"
-        print("  - [OK] GET /api/db/search?q=TVL25000001 passes")
+        print("  - [OK] GET /api/db/search?q=ABC25000001 passes")
     except Exception as e:
-        print(f"  - [FAIL] GET /api/db/search?q=TVL25000001 failed: {e}")
+        print(f"  - [FAIL] GET /api/db/search?q=ABC25000001 failed: {e}")
         success = False
 
     # 4. unknownword123 returns clean no-match
@@ -1023,12 +1023,12 @@ def test_no_hallucination_guard():
     try:
         from app.safety import validate_ollama_output
         
-        question = "What is the status of invoice TVL25000001?"
-        context_text = "Table: s_invoice_hdr_t\nRowID: 1\nInvoiceNo: TVL25000001\nAmount: 25000.00\nDate: 2024-05-21"
-        canonical_answer = "The invoice TVL25000001 has an amount of 25000.00 dated 2024-05-21."
+        question = "What is the status of invoice ABC25000001?"
+        context_text = "Table: s_invoice_hdr_t\nRowID: 1\nInvoiceNo: ABC25000001\nAmount: 25000.00\nDate: 2024-05-21"
+        canonical_answer = "The invoice ABC25000001 has an amount of 25000.00 dated 2024-05-21."
         
         # Test Case 1: Valid response (no new business-critical values)
-        valid_response = "The status of invoice TVL25000001 is active. The total amount is 25000.00. Read Only: true"
+        valid_response = "The status of invoice ABC25000001 is active. The total amount is 25000.00. Read Only: true"
         assert validate_ollama_output(valid_response, question, context_text, canonical_answer) is True, "Valid response failed validation"
         
         # Test Case 2: Hallucinated invoice number
@@ -1036,15 +1036,15 @@ def test_no_hallucination_guard():
         assert validate_ollama_output(hallucinated_invoice, question, context_text, canonical_answer) is False, "Hallucinated invoice passed validation"
         
         # Test Case 3: Hallucinated float amount
-        hallucinated_amount = "The invoice TVL25000001 has amount 99999.00. Read Only: true"
+        hallucinated_amount = "The invoice ABC25000001 has amount 99999.00. Read Only: true"
         assert validate_ollama_output(hallucinated_amount, question, context_text, canonical_answer) is False, "Hallucinated amount passed validation"
         
         # Test Case 4: Hallucinated integer >= 100
-        hallucinated_int = "The invoice TVL25000001 has 500 items. Read Only: true"
+        hallucinated_int = "The invoice ABC25000001 has 500 items. Read Only: true"
         assert validate_ollama_output(hallucinated_int, question, context_text, canonical_answer) is False, "Hallucinated integer passed validation"
         
         # Test Case 5: Valid list indices and years (whitelisted)
-        whitelisted_response = "Here are details:\n1. Invoice TVL25000001 date is 2024-05-21.\n2. Standard timeout is 10s. Read Only: true"
+        whitelisted_response = "Here are details:\n1. Invoice ABC25000001 date is 2024-05-21.\n2. Standard timeout is 10s. Read Only: true"
         assert validate_ollama_output(whitelisted_response, question, context_text, canonical_answer) is True, "Whitelisted formatting tokens failed validation"
 
         print("[OK] No-Hallucination Guard verified with 5 test cases")

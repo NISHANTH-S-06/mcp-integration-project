@@ -85,7 +85,7 @@ python verify.py
    ```
 2. Open `http://127.0.0.1:3010` in the browser.
 3. Check the right sidebar: verify the **Real MCP Server** and **Ollama LLM** cards populate successfully from the `/health` endpoint.
-4. Run chat query `TVL25000001` with Ollama enabled: verify the invoice details are formatted in a clean natural phrasing based on database evidence, and ends with `Read Only: true`.
+4. Run chat query `ABC25000001` with Ollama enabled: verify the invoice details are formatted in a clean natural phrasing based on database evidence, and ends with `Read Only: true`.
 5. Run chat query `DELETE FROM tblinvoice_master`: verify the query is blocked immediately by the safety layer without calling Ollama.
-6. Verify fallback: Stop Ollama and ask `TVL25000001` again. Verify it falls back to the rule-based response.
+6. Verify fallback: Stop Ollama and ask `ABC25000001` again. Verify it falls back to the rule-based response.
 7. External client test: Connect an external client (e.g. Cursor) to `python mcp_real_server.py` and list tools to verify all 20 live tools are visible.

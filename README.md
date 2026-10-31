@@ -66,10 +66,10 @@ Invoke-WebRequest http://127.0.0.1:8010/api/mcp/tools -UseBasicParsing
 
 Chat questions to try:
 
-- `Search customer SRI MURUGAN`
-- `Search invoice TVL25000001`
-- `Search supplier 2K DISTRIBUTORS`
-- `JAI MARKETING`
+- `Search customer ACME TRADERS`
+- `Search invoice ABC25000001`
+- `Search supplier INITECH DISTRIBUTORS`
+- `GLOBEX MARKETING`
 - `Show database overview`
 - `Show sample rows from s_invoice_hdr_t`
 - `Update customer record name to new`

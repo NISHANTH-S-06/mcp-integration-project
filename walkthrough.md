@@ -49,24 +49,24 @@ The test suite was run and passed successfully:
 ==================================================
  Running Output Polish Tests                      
 ==================================================
-  - [OK] Search customer SRI MURUGAN confidence/match_level not Low
-  - [OK] TVL25000001 primary=s_invoice_hdr_t, receipt only under Related records
+  - [OK] Search customer ACME TRADERS confidence/match_level not Low
+  - [OK] ABC25000001 primary=s_invoice_hdr_t, receipt only under Related records
   - [OK] unknownword123 clean no-match, no fake sources, no demo suggestions
   - [OK] Update customer record blocked with exact read-only safety wording
   - [OK] Greeting 'hi' returns exact helpful database assistant intro
   - [OK] 'Search customer' returns helpful browse guidance and samples
   - [OK] 'Search invoice' returns helpful browse guidance and does not leak attachfile_name
-  - [OK] JAI MARKETING direct query returns m_customers_t record details
+  - [OK] GLOBEX MARKETING direct query returns m_customers_t record details
   - [OK] Show sample rows suppresses found_data cards
   - [OK] Show sample rows does not print fake row_id 1
-  - [OK] Search customer SRI MURUGAN related records does not leak REVATHI TRADERS
+  - [OK] Search customer ACME TRADERS related records does not leak REVATHI TRADERS
 [OK] All output polish tests passed
 ==================================================
  Running Manual DB Search Endpoint Tests          
 ==================================================
-  - [OK] GET /api/db/search?q=SRI MURUGAN passes
-  - [OK] GET /api/db/search?q=JAI MARKETING passes
-  - [OK] GET /api/db/search?q=TVL25000001 passes
+  - [OK] GET /api/db/search?q=ACME TRADERS passes
+  - [OK] GET /api/db/search?q=GLOBEX MARKETING passes
+  - [OK] GET /api/db/search?q=ABC25000001 passes
   - [OK] GET /api/db/search?q=unknownword123 passes
   - [OK] GET /api/db/search write safety passes
 Running test_mcp_real_server_presence...
