@@ -151,6 +151,11 @@ def classify_intent(query: str) -> str:
     ):
         return "dataset_overview"
         
+    # 9.5 A bare question about the PO-number field stays a field/mapping question (legacy po_query),
+    # it must not be swallowed by business-entity search.
+    if re.fullmatch(r"\s*(po|purchase order)\s*(number|no\.?|#)\s*\??\s*", q_raw):
+        return "po_query"
+
     # 10. Business entity search
     from app.business_router import detect_entity
     detected_ent = detect_entity(query)

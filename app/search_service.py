@@ -453,7 +453,7 @@ async def run_real_search(query: str, limit: int = 20) -> Dict[str, Any]:
     # 4. Relevance ranking
     if intent == "exact_value_search":
         scored_sources = [(hit, float(hit.get("score") or 100.0)) for hit in candidates]
-    elif is_generic:
+    elif is_generic or intent == "validation_query":  # rows already selected by the validation tool
         scored_sources = [(hit, 100.0) for hit in candidates]
     else:
         scored_sources = relevance.rank_and_filter(candidates, question)

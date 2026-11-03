@@ -14,9 +14,11 @@ A local, read-only ERP chatbot that answers from the connected SQLite database t
 ## Quick Start
 
 ```powershell
-cd "D:\MCP PROJECT"
+cd mcp-integration-project
 python -m venv .venv
 .venv\Scripts\python.exe -m pip install -r requirements.txt
+# create the synthetic demo database (no real customer data)
+.venv\Scripts\python.exe -m app.db_reader --init-demo-db
 ```
 
 Start services in this order:
