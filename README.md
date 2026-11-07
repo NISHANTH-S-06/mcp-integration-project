@@ -1,6 +1,19 @@
-# MCP Data Assistant
+# MCP Data Assistant — Read-only ERP Chatbot over a Real MCP Server
+
+[![ci](https://github.com/NISHANTH-S-06/mcp-integration-project/actions/workflows/ci.yml/badge.svg)](https://github.com/NISHANTH-S-06/mcp-integration-project/actions/workflows/ci.yml)
 
 A local, read-only ERP chatbot that answers from the connected SQLite database through a real MCP server. The FastAPI backend calls MCP tools, the frontend renders source-backed answers, and Ollama can optionally rewrite responses using only retrieved evidence.
+
+## Architecture
+```mermaid
+flowchart LR
+  UI[Chat UI :3010] --> API[FastAPI backend :8010]
+  API --> R[Intent router]
+  R --> C[MCP client]
+  C -->|Streamable HTTP| S[MCP server :8020 - read-only tools]
+  S --> DB[(SQLite, read-only)]
+  API --> B[Response builder: results + MCP trace + sources checked]
+```
 
 ## Features
 
@@ -39,19 +52,10 @@ Open:
 | MCP Tools | http://127.0.0.1:8010/api/mcp/tools |
 | API Docs | http://127.0.0.1:8010/docs |
 
-## Real Data
+## Demo mode vs. real ERP data
 
-The current `.env` is configured for:
-
-```text
-MCP_MODE=real
-SQLITE_DB_PATH=./data/real_db/ifiveerp_skm_demo.db
-DATASET_DIR=./data/real_datasets
-MCP_SERVER_URL=http://127.0.0.1:8020/mcp
-OLLAMA_ENABLED=true
-```
-
-The imported ERP database contains 676 tables and 4,451,228 rows according to `data/registry/import_registry.json` and verification output.
+- **Demo mode (default in this repo)**: `python -m app.db_reader --init-demo-db` builds a synthetic SQLite database (fake companies such as ACME TRADERS). This is what CI and `verify.py` use.
+- **Real mode**: point `.env` at a local read-only SQLite copy of an ERP database (`MCP_MODE=real`, `SQLITE_DB_PATH=...`). The ERP database itself is private and is **not** included in this repository. During the internship project it was a 676-table ERP database (about 4.4 million rows); the assistant opened it read-only and answered with source-backed results.
 
 ## Verification
 
