@@ -5,7 +5,7 @@ Provides client-side access to the local FastMCP Server tools.
 import ast
 import asyncio
 import json
-from typing import Optional, Dict, Any
+from typing import Optional, Any
 import httpx
 import app.mcp_server
 from app import config
@@ -20,7 +20,6 @@ except ImportError:  # pragma: no cover - exercised only before dependencies are
 
 def log_tool_audit(tool_name: str, arguments: dict, records_count: int):
     import datetime
-    from pathlib import Path
     from app.config import BASE_DIR
     
     log_dir = BASE_DIR / "logs"

@@ -4,10 +4,8 @@ Inspects database tables, columns, primary keys, record counts, and structures p
 Can be run via: python -m app.db_profiler --profile
 """
 import sys
-import os
 import json
 import sqlite3
-from pathlib import Path
 
 from app.config import DB_PATH, DB_FILE_NAME, BASE_DIR
 

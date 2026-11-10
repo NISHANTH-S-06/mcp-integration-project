@@ -4,7 +4,6 @@ Safely converts MySQL/MariaDB SQL dump files to a SQLite database.
 Run via: python -m app.sql_importer --input <input_sql> --output <output_db>
 """
 import sys
-import os
 import re
 import sqlite3
 import argparse

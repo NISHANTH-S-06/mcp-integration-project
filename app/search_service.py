@@ -1,7 +1,5 @@
-import time
-from datetime import datetime
-from typing import Optional, Dict, Any, List, Tuple
-from app import db_reader, dataset_reader, llm_client, safety
+from typing import Optional, Dict, Any, List
+from app import llm_client, safety
 from app.mcp_client import MCPClient
 from app import intent_router, relevance, response_builder
 from app import config

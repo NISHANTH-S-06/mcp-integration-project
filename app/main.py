@@ -12,14 +12,12 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from app import db_reader, dataset_reader, mcp_server, llm_client, safety
+from app import db_reader, dataset_reader, llm_client, safety
 from app.mcp_client import MCPClient
-from app import intent_router, relevance, response_builder
 from app import config
 
 def log_audit(intent: str, tool_called: str, query: str, searched: str, records_returned: int, blocked: bool = False):
     import datetime
-    from pathlib import Path
     from app.config import BASE_DIR
     
     log_dir = BASE_DIR / "logs"

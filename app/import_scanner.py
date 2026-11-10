@@ -4,7 +4,6 @@ Scans data/imports/inbox/ for new files, processes them, classifies them,
 and logs them into data/registry/import_registry.json.
 Can be run via: python -m app.import_scanner --scan
 """
-import os
 import sys
 import json
 import hashlib

@@ -4,7 +4,7 @@ Evaluates query-record match scores with domain penalties and filters.
 """
 import re
 import json
-from typing import Dict, Any, List, Tuple
+from typing import List, Tuple
 
 MIN_THRESHOLD = 45.0
 

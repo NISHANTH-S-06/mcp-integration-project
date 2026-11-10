@@ -182,14 +182,13 @@ def get_dataset_overview() -> dict:
 @mcp.tool()
 def get_real_data_status() -> dict:
     """Get connection status and overview of real databases and datasets."""
-    from app.config import MCP_MODE, CONNECTED, DB_NAME, DATASETS_DIR
+    from app.config import MCP_MODE, CONNECTED, DB_NAME
     try:
         db_overview = db_reader.get_database_overview()
     except Exception:
         db_overview = {}
     ds_overview = dataset_reader.get_dataset_overview()
     
-    from pathlib import Path
     from app.config import BASE_DIR
     import json
     registry_path = BASE_DIR / "data" / "registry" / "import_registry.json"

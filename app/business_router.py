@@ -4,7 +4,6 @@ Parses db_profile.json to identify and rank relevant database tables for busines
 """
 import json
 import re
-from pathlib import Path
 from app import config
 ENTITY_KEYWORDS = {
     "customer": [

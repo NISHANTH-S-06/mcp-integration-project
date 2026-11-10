@@ -3,7 +3,6 @@ LLM client — supports Ollama (local) with rule-based fallback.
 All LLM access is purely for READ-ONLY answer generation.
 """
 import json
-import re
 import httpx
 from app.config import OLLAMA_ENABLED, OLLAMA_BASE_URL, OLLAMA_MODEL
 

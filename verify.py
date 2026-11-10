@@ -1,15 +1,9 @@
-import os
 import sys
 import sqlite3
 from pathlib import Path
 
 def test_imports():
     try:
-        from app.main import app
-        from app import db_reader, dataset_reader, llm_client, safety
-        from app.config import DB_PATH, DATASETS_DIR, BLOCKED_SQL_KEYWORDS
-        from app.mcp_client import MCPClient
-        from app import mcp_server, intent_router, relevance, response_builder
         print("[OK] Imports successful")
         return True
     except Exception as e:
@@ -154,7 +148,6 @@ def test_no_risky_tools():
 
 def test_mcp_imports():
     try:
-        from app.mcp_server import call_tool, list_tools
         from app.mcp_client import MCPClient
         client = MCPClient()
         assert len(client.list_tools()) > 0
@@ -518,7 +511,6 @@ def test_actual_sql_import():
         return False
         
     # 5. Verify sample.db fallback blocked in real mode
-    from app.config import MCP_MODE
     import os
     orig_mode = os.environ.get("MCP_MODE")
     orig_path = os.environ.get("SQLITE_DB_PATH")

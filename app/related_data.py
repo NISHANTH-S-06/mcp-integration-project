@@ -13,7 +13,7 @@ All queries are READ-ONLY (SELECT only).
 
 import sqlite3
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 from app import config
 
 logger = logging.getLogger(__name__)
